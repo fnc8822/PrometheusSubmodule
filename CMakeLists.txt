@@ -22,6 +22,11 @@ add_executable(metrics_executable src/main.c)
 # Adjust compilation flags for the prom library
 set_target_properties(prom PROPERTIES COMPILE_FLAGS "-Wno-error=pedantic -Wno-error=missing-prototypes -Wno-error=strict-prototypes -Wno-error=unused-parameter")
 
+# Link directories
+link_directories(${CMAKE_BINARY_DIR}/lib/prom-c-client/prom)
+link_directories(${CMAKE_BINARY_DIR}/lib/prom-c-client/promhttp)
+
 # Link the necessary libraries
 target_link_libraries(metricas prom promhttp cjson::cjson)
 target_link_libraries(metrics_executable metricas prom promhttp cjson::cjson)
+
