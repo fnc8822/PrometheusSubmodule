@@ -5,7 +5,6 @@ project(MetricasProject)
 
 # Add Conan setup
 include(${CMAKE_BINARY_DIR}/conanbuildinfo.cmake)
-conan_basic_setup(TARGETS)
 
 # Add subdirectories
 add_subdirectory(lib/prom-c-client/prom)
