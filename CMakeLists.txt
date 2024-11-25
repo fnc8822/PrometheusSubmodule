@@ -12,7 +12,7 @@ find_package(cJSON REQUIRED)
 find_package(libmicrohttpd REQUIRED)
 
 # Include directories
-include_directories(include lib/prom-c-client/prom/include lib/prom-c-client/promhttp/include)
+include_directories(include lib/prom-c-client/prom/include lib/prom-c-client/promhttp/include ${libmicrohttpd_INCLUDE_DIRS})
 
 # Add library
 add_library(metricas STATIC src/metrics.c src/expose_metrics.c) # Add all necessary source files
