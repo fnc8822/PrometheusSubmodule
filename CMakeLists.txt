@@ -9,6 +9,7 @@ add_subdirectory(lib/prom-c-client/promhttp)
 
 # Find dependencies
 find_package(cJSON REQUIRED)
+find_package(libmicrohttpd REQUIRED)
 
 # Include directories
 include_directories(include lib/prom-c-client/prom/include lib/prom-c-client/promhttp/include)
@@ -27,6 +28,6 @@ link_directories(${CMAKE_BINARY_DIR}/lib/prom-c-client/prom)
 link_directories(${CMAKE_BINARY_DIR}/lib/prom-c-client/promhttp)
 
 # Link the necessary libraries
-target_link_libraries(metricas prom promhttp cjson::cjson)
-target_link_libraries(metrics_executable metricas prom promhttp cjson::cjson)
+target_link_libraries(metricas prom promhttp cjson::cjson libmicrohttpd::libmicrohttpd)
+target_link_libraries(metrics_executable metricas prom promhttp cjson::cjson libmicrohttpd::libmicrohttpd)
 
