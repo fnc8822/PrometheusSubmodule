@@ -23,5 +23,5 @@ add_executable(metrics_executable src/main.c)
 set_target_properties(prom PROPERTIES COMPILE_FLAGS "-Wno-error=pedantic -Wno-error=missing-prototypes -Wno-error=strict-prototypes -Wno-error=unused-parameter")
 
 # Link the necessary libraries
-target_link_libraries(metricas prom promhttp CONAN_PKG::cjson CONAN_PKG::libmicrohttpd)
-target_link_libraries(metrics_executable metricas prom promhttp CONAN_PKG::cjson CONAN_PKG::libmicrohttpd)
+target_link_libraries(metricas prom promhttp cjson::cjson libmicrohttpd::libmicrohttpd)
+target_link_libraries(metrics_executable metricas prom promhttp cjson::cjson libmicrohttpd::libmicrohttpd)
