@@ -42,11 +42,14 @@ link_directories(${CMAKE_CURRENT_SOURCE_DIR}/../prom/build)
 
 include(FindThreads)
 
+# Find libmicrohttpd using Conan or system
+find_package(libmicrohttpd REQUIRED)
+
 add_library(promhttp SHARED)
 
 target_include_directories(
     promhttp
-    PUBLIC ${public_dir} /usr/include ${prom_include_dir}
+    PUBLIC ${public_dir} /usr/include ${prom_include_dir} ${LIBMICROHTTPD_INCLUDE_DIRS}  # Add libmicrohttpd includes
     PRIVATE ${private_dir}
 )
 
@@ -62,7 +65,8 @@ find_library(microhttpd microhttpd)
 target_compile_options(promhttp PRIVATE "-Werror" "-Wuninitialized" "-Wall" "-Wno-unused-label" "-std=gnu11")
 target_compile_options(promhttp PUBLIC "-Werror" "-Wuninitialized" "-Wall" "-Wno-unused-label" "-std=gnu11")
 
-target_link_libraries(promhttp PUBLIC Threads::Threads prom microhttpd)
+# Link promhttp with the necessary libraries including microhttpd
+target_link_libraries(promhttp PUBLIC Threads::Threads prom microhttpd::microhttpd)
 
 set(CPACK_PACKAGE_NAME libpromhttp-dev)
 set(CPACK_GENERATOR TGZ;DEB)
