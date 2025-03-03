@@ -66,7 +66,7 @@ target_compile_options(promhttp PRIVATE "-Werror" "-Wuninitialized" "-Wall" "-Wn
 target_compile_options(promhttp PUBLIC "-Werror" "-Wuninitialized" "-Wall" "-Wno-unused-label" "-std=gnu11")
 
 # Link promhttp with the necessary libraries including microhttpd
-target_link_libraries(promhttp PUBLIC Threads::Threads prom microhttpd::microhttpd)
+target_link_libraries(promhttp PUBLIC Threads::Threads prom libmicrohttpd::libmicrohttpd)
 
 set(CPACK_PACKAGE_NAME libpromhttp-dev)
 set(CPACK_GENERATOR TGZ;DEB)
