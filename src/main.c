@@ -109,7 +109,7 @@ int main(int argc, char* argv[])
 {
     (void)argc; // Argumento no utilizado
     (void)argv; // Argumento no utilizado
-    const char *config_file_path = getenv("CONFIG_FILE_PATH");
+    const char *config_file_path = argv[1];
     if (config_file_path == NULL) {
         fprintf(stderr, "Environment variable CONFIG_FILE_PATH is not set.\n");
         return EXIT_FAILURE;
