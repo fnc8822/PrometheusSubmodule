@@ -3,7 +3,6 @@
  * @brief Header file for main.c
  * includes global variables and function prototypes
  */
-
 extern bool cpu_enabled;
 extern bool memory_enabled;
 extern bool battery_enabled;

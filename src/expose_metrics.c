@@ -10,7 +10,8 @@ extern bool processes_enabled;
 extern bool sys_calls_enabled;
 extern bool disk_io_enabled;
 extern bool network_enabled;
-
+int mm_method = FIRST_FIT;
+#define FRAGMENTATION 2
 /** Mutex para sincronización de hilos */
 pthread_mutex_t lock;
 
@@ -35,9 +36,9 @@ enum processstats
 };
 enum memstats
 {
-    TOTAL,
-    FREE,
-    AVAIL
+    TOTALPROC,
+    FREEPROC,
+    AVAILPROC
 };
 
 /** Métrica de Prometheus para el uso de CPU */
@@ -76,6 +77,14 @@ static prom_gauge_t* network_rx_drops_metric;
 static prom_gauge_t* network_rx_errors_metric;
 /** Metrica de Prometheus para la cantidad de cambios de contexto */
 static prom_gauge_t* context_changes_metric;
+/** Metrica de Prometheus para la memoria libre del alocador */
+static prom_gauge_t* allocator_free_memory_metric;
+/** Metrica de Prometheus para la memoria alocada del alocador */
+static prom_gauge_t* allocator_allocated_memory_metric;
+/** Metrica de Prometheus para la fragmentacion del alocador */
+static prom_gauge_t* allocator_fragmentation_metric;
+/** Metrica de Prometheus para el metodo de alocacion */
+static prom_gauge_t* allocator_method_metric;
 
 void update_cpu_gauge()
 {
@@ -119,15 +128,27 @@ void update_memory_metrics()
         return;
     }
 
-    unsigned long total_memory = memory_info[TOTAL];
-    unsigned long free_memory = memory_info[FREE];
-    unsigned long available_memory = memory_info[AVAIL];
+    unsigned long total_memory = memory_info[TOTALPROC];
+    unsigned long free_memory = memory_info[FREEPROC];
+    unsigned long available_memory = memory_info[AVAILPROC];
     unsigned long used_memory = total_memory - free_memory;
     unsigned long used_memory_percentage = used_memory * 100 / total_memory;
 
     prom_gauge_set(memory_usage_metric, used_memory_percentage, NULL);
     prom_gauge_set(memory_used_metric, used_memory, NULL);
     prom_gauge_set(memory_available_metric, available_memory, NULL);
+
+    size_t* allocator_memory_usage = get_allocator_memory_usage();
+    int allocated_memory = allocator_memory_usage[ALLOCATED];
+    int free_allocator_memory = allocator_memory_usage[FREE];
+    int fragmentation = allocator_memory_usage[FRAGMENTATION];
+    if (allocator_memory_usage != NULL)
+    {
+        prom_gauge_set(allocator_allocated_memory_metric, allocated_memory, NULL);
+        prom_gauge_set(allocator_free_memory_metric, free_allocator_memory, NULL);
+    }
+    prom_gauge_set(allocator_fragmentation_metric, fragmentation, NULL);
+    prom_gauge_set(allocator_method_metric, mm_method, NULL);
 }
 
 void update_disk_io_gauge()
@@ -319,40 +340,82 @@ int init_metrics()
         fprintf(stderr, "Error al crear la métrica de cambios de contexto\n");
         return EXIT_FAILURE;
     }
+
+    allocator_free_memory_metric = prom_gauge_new("allocator_free_memory", "Memoria libre del alocador", 0, NULL);
+    if (allocator_free_memory_metric == NULL)
+    {
+        fprintf(stderr, "Error al crear la métrica de memoria libre del alocador\n");
+        return EXIT_FAILURE;
+    }
+
+    allocator_allocated_memory_metric = prom_gauge_new("allocator_allocated_memory", "Memoria alocada del alocador", 0, NULL);
+    if (allocator_allocated_memory_metric == NULL)
+    {
+        fprintf(stderr, "Error al crear la métrica de memoria alocada del alocador\n");
+        return EXIT_FAILURE;
+    }
+
+    allocator_fragmentation_metric = prom_gauge_new("allocator_fragmentation", "Fragmentación del alocador", 0, NULL);
+    if (allocator_fragmentation_metric == NULL)
+    {
+        fprintf(stderr, "Error al crear la métrica de fragmentación del alocador\n");
+        return EXIT_FAILURE;
+    }
+
+    allocator_method_metric = prom_gauge_new("allocator_method", "Método de alocación", 0, NULL);
+    if (allocator_method_metric == NULL)
+    {
+        fprintf(stderr, "Error al crear la métrica de método de alocación\n");
+        return EXIT_FAILURE;
+    }
     // Registramos las métricas en el registro por defecto
-    if(cpu_enabled){
+    if (cpu_enabled)
+    {
         prom_collector_registry_must_register(cpu_usage_metric);
     }
-    if(memory_enabled){
+    if (memory_enabled)
+    {
         prom_collector_registry_must_register(memory_usage_metric);
         prom_collector_registry_must_register(memory_used_metric);
         prom_collector_registry_must_register(memory_available_metric);
+        prom_collector_registry_must_register(allocator_free_memory_metric);
+        prom_collector_registry_must_register(allocator_allocated_memory_metric);
+        prom_collector_registry_must_register(allocator_fragmentation_metric);
+        prom_collector_registry_must_register(allocator_method_metric);
     }
-    if(cpu_speed_enabled){
+    if (cpu_speed_enabled)
+    {
         prom_collector_registry_must_register(cpu_speed_metric);
     }
-    if(avg_load_enabled){
+    if (avg_load_enabled)
+    {
         prom_collector_registry_must_register(avg_load_metric);
     }
-    if(cpu_temp_enabled){
+    if (cpu_temp_enabled)
+    {
         prom_collector_registry_must_register(cpu_temp_metric);
     }
-    if(processes_enabled){
+    if (processes_enabled)
+    {
         prom_collector_registry_must_register(number_of_processes_metric);
         prom_collector_registry_must_register(context_changes_metric);
     }
-    if(sys_calls_enabled){
+    if (sys_calls_enabled)
+    {
         prom_collector_registry_must_register(sys_calls_metric);
     }
-    if(battery_enabled){
+    if (battery_enabled)
+    {
         prom_collector_registry_must_register(battery_level_metric);
     }
-    if(disk_io_enabled){
+    if (disk_io_enabled)
+    {
         prom_collector_registry_must_register(disk_reads_metric);
         prom_collector_registry_must_register(disk_writes_metric);
         prom_collector_registry_must_register(disk_io_inprogress_metric);
     }
-    if(network_enabled){
+    if (network_enabled)
+    {
         prom_collector_registry_must_register(network_tx_drops_metric);
         prom_collector_registry_must_register(network_tx_errors_metric);
         prom_collector_registry_must_register(network_rx_drops_metric);
@@ -452,3 +515,4 @@ void destroy_mutex()
 {
     pthread_mutex_destroy(&lock);
 }
+

@@ -108,10 +108,10 @@ void read_config(const char *config_file_path){
 int main(int argc, char* argv[])
 {
     (void)argc; // Argumento no utilizado
-    (void)argv; // Argumento no utilizado
+    (void)argv;
     const char *config_file_path = argv[1];
     if (config_file_path == NULL) {
-        fprintf(stderr, "Environment variable CONFIG_FILE_PATH is not set.\n");
+        fprintf(stderr, "Invalid path passed as argument.\n");
         return EXIT_FAILURE;
     }
 

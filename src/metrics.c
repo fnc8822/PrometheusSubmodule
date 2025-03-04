@@ -21,9 +21,9 @@ enum processstats
 };
 enum memstats
 {
-    TOTAL,
-    FREE,
-    AVAIL
+    TOTALPROC,
+    FREEPROC,
+    AVAILPROC
 };
 /** Define el tamaño del arreglo de variables que se extrae de /proc/meminfo  */
 #define MEMORY_EXTRACT_VARIABLES 3
@@ -45,15 +45,15 @@ unsigned long* get_memory_usage()
     char line[BUFFER_SIZE];
     while (fgets(line, sizeof(line), fp))
     {
-        if (sscanf(line, "MemTotal: %lu kB", &memory_info[TOTAL]) == 1)
+        if (sscanf(line, "MemTotal: %lu kB", &memory_info[TOTALPROC]) == 1)
         {
             continue;
         }
-        if (sscanf(line, "MemFree: %lu kB", &memory_info[FREE]) == 1)
+        if (sscanf(line, "MemFree: %lu kB", &memory_info[FREEPROC]) == 1)
         {
             continue;
         }
-        if (sscanf(line, "MemAvailable: %lu kB", &memory_info[AVAIL]) == 1)
+        if (sscanf(line, "MemAvailable: %lu kB", &memory_info[AVAILPROC]) == 1)
         {
             continue;
         }
