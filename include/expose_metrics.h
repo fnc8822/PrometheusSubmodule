@@ -8,11 +8,11 @@
 #include <prom.h>
 #include <promhttp.h>
 #include <pthread.h>
-#include <stdbool.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
 #include <unistd.h> // Para sleep
+#include <stdbool.h>
 /**
  * @brief Tamaño del buffer para leer archivos.
  */
